@@ -17,7 +17,8 @@ chrome.runtime.onMessage.addListener((message, _sender, _sendResponse) => {
     case "forward_subtitle":
       chrome.tabs.sendMessage(message.targetTabId, {
         action: "new_subtitle",
-        text: message.text
+        text: message.text,
+        translation: message.translation ?? null
       }).catch(() => {});
       break;
     case "status_update":

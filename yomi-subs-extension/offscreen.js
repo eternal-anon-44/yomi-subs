@@ -1,6 +1,6 @@
 // Offscreen document — runs in a hidden page that has full Web API access.
-// Handles MediaRecorder, chunking, and the choice between local WebSocket
-// (faster-whisper backend) and direct OpenAI Whisper API calls.
+// Handles MediaRecorder, chunking, transcription (local WebSocket or OpenAI),
+// and optional live translation (Google Translate API).
 
 let mediaRecorder = null;
 let socket = null;
@@ -43,7 +43,7 @@ async function beginRecording(streamId) {
   }
 
   // Route audio back to the tab's speakers so the user can still hear it.
-  // Disable via settings if the user wants silent (headless) transcription.
+  // Disable via Settings if the user wants silent (headless) transcription.
   if (currentSettings.audioMonitor !== false) {
     audioCtx = new AudioContext();
     const src = audioCtx.createMediaStreamSource(stream);
@@ -86,12 +86,12 @@ function startLocalMode(stream) {
     if (evt.code !== 1000) sendStatus("error:ws_disconnected");
   };
 
-  socket.onmessage = (evt) => {
+  socket.onmessage = async (evt) => {
     const text = evt.data?.trim();
-    if (text) {
-      sendStatus("recording");
-      forwardSubtitle(text);
-    }
+    if (!text) return;
+    sendStatus("recording");
+    const translation = await maybeTranslate(text);
+    forwardSubtitle(text, translation);
   };
 }
 
@@ -115,7 +115,8 @@ function startOpenAIMode(stream) {
       const text = await callWhisperAPI(blob, apiKey);
       if (text?.trim()) {
         sendStatus("recording");
-        forwardSubtitle(text.trim());
+        const translation = await maybeTranslate(text.trim());
+        forwardSubtitle(text.trim(), translation);
       } else {
         sendStatus("recording");
       }
@@ -148,12 +149,51 @@ async function callWhisperAPI(audioBlob, apiKey) {
   return data.text;
 }
 
-// ── Shared recording helper ──────────────────────────────────────────────────
+// ── Google Translate ──────────────────────────────────────────────────────────
+
+// Returns the translated string, or null if translation is disabled / fails.
+// Errors are non-fatal — the Japanese subtitle is always shown regardless.
+async function maybeTranslate(text) {
+  if (!currentSettings.translateEnabled) return null;
+  const key = currentSettings.googleApiKey?.trim();
+  if (!key) return null;
+
+  try {
+    return await callGoogleTranslate(text, currentSettings.targetLang || "en", key);
+  } catch (err) {
+    console.warn("[YomiSubs] Translation error (non-fatal):", err.message);
+    return null;
+  }
+}
+
+async function callGoogleTranslate(text, targetLang, apiKey) {
+  const res = await fetch(
+    `https://translation.googleapis.com/language/translate/v2?key=${apiKey}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        q: text,
+        source: "ja",
+        target: targetLang,
+        format: "text"
+      })
+    }
+  );
+
+  if (!res.ok) {
+    const errBody = await res.json().catch(() => ({}));
+    throw new Error(errBody.error?.message || `HTTP ${res.status}`);
+  }
+
+  const data = await res.json();
+  return data.data?.translations?.[0]?.translatedText ?? null;
+}
+
+// ── Shared recording helper ───────────────────────────────────────────────────
 
 // Continuously records in fixed-length chunks and calls onChunk(blob) for each.
-// Uses a stop/start cycle on a single MediaRecorder (same approach as v1)
-// so we never miss audio between chunks — a new recording starts the instant
-// the previous one stops.
+// Uses a stop/start cycle so we never miss audio between chunks.
 function setupChunkedRecorder(stream, chunkMs, onChunk) {
   const mimeType = "audio/webm;codecs=opus";
   mediaRecorder = new MediaRecorder(stream, { mimeType });
@@ -172,7 +212,7 @@ function setupChunkedRecorder(stream, chunkMs, onChunk) {
   }, chunkMs);
 }
 
-// ── Cleanup ──────────────────────────────────────────────────────────────────
+// ── Cleanup ───────────────────────────────────────────────────────────────────
 
 function cleanup() {
   if (chunkInterval) { clearInterval(chunkInterval); chunkInterval = null; }
@@ -182,16 +222,17 @@ function cleanup() {
   if (audioCtx) { audioCtx.close(); audioCtx = null; }
 }
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 function sendStatus(status) {
   chrome.runtime.sendMessage({ action: "status_update", status }).catch(() => {});
 }
 
-function forwardSubtitle(text) {
+function forwardSubtitle(text, translation = null) {
   chrome.runtime.sendMessage({
     action: "forward_subtitle",
     targetTabId,
-    text
+    text,
+    translation
   }).catch(() => {});
 }

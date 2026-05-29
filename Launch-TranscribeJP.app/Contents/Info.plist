@@ -8,9 +8,9 @@
   <key>CFBundleIdentifier</key>
   <string>com.yomisubs.launcher</string>
   <key>CFBundleName</key>
-  <string>Launch-TranscribeJP</string>
+  <string>Yomi-Subs</string>
   <key>CFBundleDisplayName</key>
-  <string>Launch TranscribeJP</string>
+  <string>Yomi-Subs</string>
   <key>CFBundleVersion</key>
   <string>2.0</string>
   <key>CFBundleShortVersionString</key>

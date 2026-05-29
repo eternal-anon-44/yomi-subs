@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Yomi-Subs — Real-Time Japanese Transcription</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0f0f13;
+      color: #e8e8e8;
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 24px;
+    }
+    h1 { font-size: 2.8rem; color: #e63946; margin-bottom: 8px; }
+    p  { color: #aaa; font-size: 1.1rem; max-width: 560px; text-align: center; line-height: 1.7; }
+    .links { margin-top: 32px; display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
+    a.btn {
+      padding: 12px 28px;
+      border-radius: 8px;
+      font-weight: 700;
+      text-decoration: none;
+      font-size: 1rem;
+      transition: opacity 0.15s;
+    }
+    a.btn:hover { opacity: 0.85; }
+    .btn-primary  { background: #e63946; color: #fff; }
+    .btn-secondary { background: #1e1e2a; color: #ccc; border: 1px solid #333; }
+    .badge { font-size: 3rem; margin-bottom: 8px; }
+  </style>
+</head>
+<body>
+  <div class="badge">字</div>
+  <h1>Yomi-Subs</h1>
+  <p>Real-time Japanese transcription overlay for any Chrome video tab. Powered by local <strong>faster-whisper</strong> or the <strong>OpenAI Whisper API</strong>. Yomitan-compatible.</p>
+  <div class="links">
+    <a class="btn btn-primary"
+       href="https://github.com/eternal-anon-44/yomi-subs/releases/latest">
+      ⬇ Download Latest Release
+    </a>
+    <a class="btn btn-secondary"
+       href="https://github.com/eternal-anon-44/yomi-subs">
+      GitHub →
+    </a>
+    <a class="btn btn-secondary"
+       href="privacy-policy.html">
+      Privacy Policy
+    </a>
+  </div>
+</body>
+</html>

@@ -93,12 +93,26 @@ class YomiSubsApp:
         self.stop_btn.pack(fill=tk.X)
 
         # Log area — monospace CJK font so Japanese output is readable
+        self._log_font_size = tk.IntVar(value=20)
         self.log = scrolledtext.ScrolledText(
             self.root, wrap=tk.WORD, height=14,
             bg="#000000", fg="#00ff41",
-            font=("MS Gothic", 14), insertbackground="#00ff41"
+            font=("MS Gothic", 20), insertbackground="#00ff41"
         )
-        self.log.pack(padx=24, pady=(12, 18), fill=tk.BOTH, expand=True)
+        self.log.pack(padx=24, pady=(12, 4), fill=tk.BOTH, expand=True)
+
+        # Font size slider
+        fs_frame = tk.Frame(self.root, bg="#0f0f13")
+        fs_frame.pack(fill=tk.X, padx=24, pady=(0, 10))
+        tk.Label(fs_frame, text="Font size", font=("Segoe UI", 9),
+                 bg="#0f0f13", fg="#555").pack(side=tk.LEFT)
+        tk.Scale(
+            fs_frame, from_=10, to=40, orient=tk.HORIZONTAL,
+            variable=self._log_font_size, command=self._on_font_size,
+            bg="#0f0f13", fg="#888", troughcolor="#1a1a24",
+            highlightthickness=0, bd=0, length=180, showvalue=True,
+            font=("Segoe UI", 8)
+        ).pack(side=tk.LEFT, padx=(8, 0))
 
         # Footer
         tk.Label(self.root,
@@ -212,6 +226,9 @@ class YomiSubsApp:
             self.status_var.set(text),
             self.status_lbl.config(fg=color)
         ))
+
+    def _on_font_size(self, _=None):
+        self.log.config(font=("MS Gothic", self._log_font_size.get()))
 
 
 # ── Entry point ───────────────────────────────────────────────────────────────

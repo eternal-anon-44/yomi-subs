@@ -46,21 +46,23 @@ Browser tab audio
 
 ## Installation
 
-### From the Chrome Web Store _(coming soon)_
-Click **Add to Chrome** on the store listing page.
+### Quickest way — download the release ZIP
 
-### Manual / Developer mode
+1. Go to the [Releases page](https://github.com/eternal-anon-44/yomi-subs/releases)
+2. Download **`extension-v2.zip`** from the latest release
+3. Unzip it anywhere on your machine
+4. Open Chrome → `chrome://extensions/`
+5. Enable **Developer mode** (toggle, top-right corner)
+6. Click **Load unpacked** → select the `yomi-subs-extension/` folder inside the unzipped folder
+7. The Yomi-Subs icon appears in your toolbar
 
-1. Clone this repository:
-   ```bash
-   git clone https://github.com/YOUR_GITHUB_USERNAME/yomi-subs.git
-   cd yomi-subs/yomi-subs-v2
-   ```
+### From source
 
-2. Open Chrome → `chrome://extensions/`
-3. Enable **Developer mode** (toggle, top-right)
-4. Click **Load unpacked** → select the `yomi-subs-extension/` folder
-5. The Yomi-Subs icon appears in your toolbar
+```bash
+git clone https://github.com/eternal-anon-44/yomi-subs.git
+```
+
+Then follow steps 4–7 above, pointing Load unpacked at `yomi-subs/yomi-subs-v2/yomi-subs-extension/`.
 
 ---
 

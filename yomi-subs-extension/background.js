@@ -31,20 +31,26 @@ chrome.runtime.onMessage.addListener((message, _sender, _sendResponse) => {
 // ── Keyboard shortcut ────────────────────────────────────────────────────────
 
 chrome.commands.onCommand.addListener(async (command) => {
-  if (command !== "toggle-transcription") return;
-
-  if (isRecording) {
-    handleStop();
-  } else {
+  if (command === "toggle-transcription") {
+    if (isRecording) {
+      handleStop();
+    } else {
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (tab) {
+        const settings = await loadSettings();
+        handleStart({
+          tabId: tab.id,
+          delayVideo: settings.delayVideo,
+          delayValue: settings.delayValue,
+          settings
+        });
+      }
+    }
+  } else if (command === "toggle-overlay") {
+    // Hide/show the overlay without stopping transcription
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (tab) {
-      const settings = await loadSettings();
-      handleStart({
-        tabId: tab.id,
-        delayVideo: settings.delayVideo,
-        delayValue: settings.delayValue,
-        settings
-      });
+      chrome.tabs.sendMessage(tab.id, { action: "toggle_overlay" }).catch(() => {});
     }
   }
 });

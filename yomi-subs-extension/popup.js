@@ -1,4 +1,10 @@
 // Popup controller — loads/saves settings, drives the UI, relays start/stop.
+//
+// NOTE: chrome.* API calls are guarded so this file can be previewed as a
+// plain file:// URL without crashing — but full functionality requires the
+// extension context (Load unpacked via chrome://extensions).
+
+const IN_EXTENSION = typeof chrome !== "undefined" && !!chrome?.storage;
 
 const DEFAULTS = {
   mode: "local",
@@ -18,31 +24,31 @@ const DEFAULTS = {
 
 const $ = (id) => document.getElementById(id);
 
-const statusDot  = $("statusDot");
-const statusText = $("statusText");
-const startBtn   = $("startBtn");
-const stopBtn    = $("stopBtn");
-const delaySlider = $("delaySlider");
-const delayVal   = $("delayVal");
-const syncDelay  = $("syncDelay");
+const statusDot       = $("statusDot");
+const statusText      = $("statusText");
+const startBtn        = $("startBtn");
+const stopBtn         = $("stopBtn");
+const toggleOverlayBtn = $("toggleOverlayBtn");
+const delaySlider     = $("delaySlider");
+const delayVal        = $("delayVal");
+const syncDelay       = $("syncDelay");
 
-// Settings panel
-const modeLocal    = $("modeLocal");
-const modeOpenAI   = $("modeOpenAI");
-const localPanel   = $("localPanel");
-const openaiPanel  = $("openaiPanel");
-const wsUrlInput   = $("wsUrl");
-const apiKeyInput  = $("apiKey");
-const toggleKey    = $("toggleKey");
-const openaiChunk  = $("openaiChunk");
-const openaiChunkVal = $("openaiChunkVal");
-const fontSizeSlider = $("fontSize");
-const fontSizeVal  = $("fontSizeVal");
-const positionSel  = $("subtitlePosition");
-const ocrMode      = $("ocrMode");
-const audioMonitor = $("audioMonitor");
-const saveBtn      = $("saveBtn");
-const saveStatus   = $("saveStatus");
+const modeLocal       = $("modeLocal");
+const modeOpenAI      = $("modeOpenAI");
+const localPanel      = $("localPanel");
+const openaiPanel     = $("openaiPanel");
+const wsUrlInput      = $("wsUrl");
+const apiKeyInput     = $("apiKey");
+const toggleKey       = $("toggleKey");
+const openaiChunk     = $("openaiChunk");
+const openaiChunkVal  = $("openaiChunkVal");
+const fontSizeSlider  = $("fontSize");
+const fontSizeVal     = $("fontSizeVal");
+const positionSel     = $("subtitlePosition");
+const ocrMode         = $("ocrMode");
+const audioMonitor    = $("audioMonitor");
+const saveBtn         = $("saveBtn");
+const saveStatus      = $("saveStatus");
 
 // ── Tab switching ─────────────────────────────────────────────────────────────
 
@@ -79,70 +85,6 @@ function setStatus(raw) {
   statusText.style.color = "";
 }
 
-// Receive status updates pushed from the background service worker
-chrome.runtime.onMessage.addListener((msg) => {
-  if (msg.action === "status_update") setStatus(msg.status);
-});
-
-// ── Load settings into UI ─────────────────────────────────────────────────────
-
-async function loadSettings() {
-  const s = await chrome.storage.sync.get(DEFAULTS);
-
-  (s.mode === "openai" ? modeOpenAI : modeLocal).checked = true;
-  toggleModePanel(s.mode);
-
-  wsUrlInput.value     = s.wsUrl;
-  apiKeyInput.value    = s.openaiApiKey;
-  delaySlider.value    = s.delayValue;
-  delayVal.textContent = parseFloat(s.delayValue).toFixed(1) + " s";
-  syncDelay.checked    = s.delayVideo;
-
-  openaiChunk.value          = s.chunkDurationOpenAI;
-  openaiChunkVal.textContent = s.chunkDurationOpenAI + " s";
-
-  fontSizeSlider.value    = s.fontSize;
-  fontSizeVal.textContent = s.fontSize + " px";
-
-  positionSel.value    = s.subtitlePosition;
-  ocrMode.checked      = s.ocrMode;
-  audioMonitor.checked = s.audioMonitor;
-
-  return s;
-}
-
-// ── Save settings ─────────────────────────────────────────────────────────────
-
-async function saveSettings() {
-  const mode = document.querySelector("input[name='mode']:checked").value;
-  const settings = {
-    mode,
-    openaiApiKey:       apiKeyInput.value.trim(),
-    wsUrl:              wsUrlInput.value.trim() || DEFAULTS.wsUrl,
-    chunkDuration:      parseFloat(delaySlider.value),
-    chunkDurationOpenAI: parseInt(openaiChunk.value, 10),
-    delayVideo:         syncDelay.checked,
-    delayValue:         parseFloat(delaySlider.value),
-    fontSize:           parseInt(fontSizeSlider.value, 10),
-    subtitlePosition:   positionSel.value,
-    ocrMode:            ocrMode.checked,
-    audioMonitor:       audioMonitor.checked
-  };
-
-  await chrome.storage.sync.set(settings);
-
-  // Push display changes to any active content scripts immediately
-  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  if (tab) {
-    chrome.tabs.sendMessage(tab.id, { action: "update_settings", settings }).catch(() => {});
-  }
-
-  saveStatus.textContent = "✓ Saved";
-  setTimeout(() => { saveStatus.textContent = ""; }, 2000);
-
-  return settings;
-}
-
 // ── Mode panel toggle ─────────────────────────────────────────────────────────
 
 function toggleModePanel(mode) {
@@ -153,7 +95,7 @@ function toggleModePanel(mode) {
 modeLocal.addEventListener("change",  () => toggleModePanel("local"));
 modeOpenAI.addEventListener("change", () => toggleModePanel("openai"));
 
-// ── Live slider labels ────────────────────────────────────────────────────────
+// ── Live slider labels — no chrome API calls, always works ───────────────────
 
 delaySlider.addEventListener("input", () => {
   delayVal.textContent = parseFloat(delaySlider.value).toFixed(1) + " s";
@@ -175,12 +117,32 @@ toggleKey.addEventListener("click", () => {
   toggleKey.textContent = isPassword ? "🙈" : "👁";
 });
 
+// ── Overlay toggle ────────────────────────────────────────────────────────────
+
+let overlayHidden = false;
+
+toggleOverlayBtn.addEventListener("click", async () => {
+  overlayHidden = !overlayHidden;
+  toggleOverlayBtn.textContent = overlayHidden ? "◉ Show Subtitles" : "◉ Hide Subtitles";
+  toggleOverlayBtn.style.opacity = overlayHidden ? "0.5" : "1";
+
+  if (!IN_EXTENSION) return;
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (tab) chrome.tabs.sendMessage(tab.id, { action: "toggle_overlay" }).catch(() => {});
+});
+
 // ── Start / Stop ──────────────────────────────────────────────────────────────
 
 startBtn.addEventListener("click", async () => {
+  if (!IN_EXTENSION) { setStatus("ready"); return; }
   const settings = await saveSettings();
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   if (!tab) return;
+
+  // Reset overlay state when starting a new session
+  overlayHidden = false;
+  toggleOverlayBtn.textContent = "◉ Hide Subtitles";
+  toggleOverlayBtn.style.opacity = "1";
 
   setStatus("connecting");
   chrome.runtime.sendMessage({
@@ -193,12 +155,83 @@ startBtn.addEventListener("click", async () => {
 });
 
 stopBtn.addEventListener("click", () => {
+  if (!IN_EXTENSION) { setStatus("stopped"); return; }
   chrome.runtime.sendMessage({ action: "stop" });
   setStatus("stopped");
 });
 
 saveBtn.addEventListener("click", saveSettings);
 
-// ── Init ──────────────────────────────────────────────────────────────────────
+// ── Load settings into UI ─────────────────────────────────────────────────────
 
-loadSettings();
+async function loadSettings() {
+  if (!IN_EXTENSION) return DEFAULTS;
+
+  const s = await chrome.storage.sync.get(DEFAULTS);
+
+  (s.mode === "openai" ? modeOpenAI : modeLocal).checked = true;
+  toggleModePanel(s.mode);
+
+  wsUrlInput.value           = s.wsUrl;
+  apiKeyInput.value          = s.openaiApiKey;
+  delaySlider.value          = s.delayValue;
+  delayVal.textContent       = parseFloat(s.delayValue).toFixed(1) + " s";
+  syncDelay.checked          = s.delayVideo;
+
+  openaiChunk.value          = s.chunkDurationOpenAI;
+  openaiChunkVal.textContent = s.chunkDurationOpenAI + " s";
+
+  fontSizeSlider.value       = s.fontSize;
+  fontSizeVal.textContent    = s.fontSize + " px";
+
+  positionSel.value          = s.subtitlePosition;
+  ocrMode.checked            = s.ocrMode;
+  audioMonitor.checked       = s.audioMonitor;
+
+  return s;
+}
+
+// ── Save settings ─────────────────────────────────────────────────────────────
+
+async function saveSettings() {
+  const mode = document.querySelector("input[name='mode']:checked").value;
+  const settings = {
+    mode,
+    openaiApiKey:        apiKeyInput.value.trim(),
+    wsUrl:               wsUrlInput.value.trim() || DEFAULTS.wsUrl,
+    chunkDuration:       parseFloat(delaySlider.value),
+    chunkDurationOpenAI: parseInt(openaiChunk.value, 10),
+    delayVideo:          syncDelay.checked,
+    delayValue:          parseFloat(delaySlider.value),
+    fontSize:            parseInt(fontSizeSlider.value, 10),
+    subtitlePosition:    positionSel.value,
+    ocrMode:             ocrMode.checked,
+    audioMonitor:        audioMonitor.checked
+  };
+
+  if (!IN_EXTENSION) return settings;
+
+  await chrome.storage.sync.set(settings);
+
+  // Push display changes to the active content script immediately
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (tab) {
+    chrome.tabs.sendMessage(tab.id, { action: "update_settings", settings }).catch(() => {});
+  }
+
+  saveStatus.textContent = "✓ Saved";
+  setTimeout(() => { saveStatus.textContent = ""; }, 2000);
+
+  return settings;
+}
+
+// ── Init — chrome API calls last so DOM event listeners always register ───────
+
+if (IN_EXTENSION) {
+  // Receive status pushes from the background service worker
+  chrome.runtime.onMessage.addListener((msg) => {
+    if (msg.action === "status_update") setStatus(msg.status);
+  });
+
+  loadSettings();
+}

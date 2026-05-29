@@ -48,6 +48,13 @@
         "mac":     "Alt+Shift+T"
       },
       "description": "Toggle transcription on/off"
+    },
+    "toggle-overlay": {
+      "suggested_key": {
+        "default": "Alt+Shift+H",
+        "mac":     "Alt+Shift+H"
+      },
+      "description": "Show/hide subtitle overlay without stopping transcription"
     }
   },
   "content_security_policy": {

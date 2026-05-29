@@ -17,7 +17,10 @@ const DEFAULTS = {
   fontSize: 34,
   subtitlePosition: "bottom",
   ocrMode: false,
-  audioMonitor: true
+  audioMonitor: true,
+  translateEnabled: false,
+  googleApiKey: "",
+  targetLang: "en"
 };
 
 // ── Element refs ──────────────────────────────────────────────────────────────
@@ -47,8 +50,15 @@ const fontSizeVal     = $("fontSizeVal");
 const positionSel     = $("subtitlePosition");
 const ocrMode         = $("ocrMode");
 const audioMonitor    = $("audioMonitor");
-const saveBtn         = $("saveBtn");
-const saveStatus      = $("saveStatus");
+const saveBtn           = $("saveBtn");
+const saveStatus        = $("saveStatus");
+
+// Translation
+const translateEnabled  = $("translateEnabled");
+const translatePanel    = $("translatePanel");
+const googleApiKey      = $("googleApiKey");
+const toggleGoogleKey   = $("toggleGoogleKey");
+const targetLang        = $("targetLang");
 
 // ── Tab switching ─────────────────────────────────────────────────────────────
 
@@ -109,13 +119,27 @@ fontSizeSlider.addEventListener("input", () => {
   fontSizeVal.textContent = fontSizeSlider.value + " px";
 });
 
-// ── API key visibility toggle ─────────────────────────────────────────────────
+// ── API key visibility toggles ────────────────────────────────────────────────
 
 toggleKey.addEventListener("click", () => {
   const isPassword = apiKeyInput.type === "password";
   apiKeyInput.type = isPassword ? "text" : "password";
   toggleKey.textContent = isPassword ? "🙈" : "👁";
 });
+
+toggleGoogleKey.addEventListener("click", () => {
+  const isPassword = googleApiKey.type === "password";
+  googleApiKey.type = isPassword ? "text" : "password";
+  toggleGoogleKey.textContent = isPassword ? "🙈" : "👁";
+});
+
+// ── Translation panel show/hide ───────────────────────────────────────────────
+
+function syncTranslatePanel() {
+  translatePanel.style.display = translateEnabled.checked ? "block" : "none";
+}
+
+translateEnabled.addEventListener("change", syncTranslatePanel);
 
 // ── Overlay toggle ────────────────────────────────────────────────────────────
 
@@ -188,6 +212,11 @@ async function loadSettings() {
   ocrMode.checked            = s.ocrMode;
   audioMonitor.checked       = s.audioMonitor;
 
+  translateEnabled.checked   = s.translateEnabled;
+  googleApiKey.value         = s.googleApiKey;
+  targetLang.value           = s.targetLang;
+  syncTranslatePanel();
+
   return s;
 }
 
@@ -206,7 +235,10 @@ async function saveSettings() {
     fontSize:            parseInt(fontSizeSlider.value, 10),
     subtitlePosition:    positionSel.value,
     ocrMode:             ocrMode.checked,
-    audioMonitor:        audioMonitor.checked
+    audioMonitor:        audioMonitor.checked,
+    translateEnabled:    translateEnabled.checked,
+    googleApiKey:        googleApiKey.value.trim(),
+    targetLang:          targetLang.value
   };
 
   if (!IN_EXTENSION) return settings;

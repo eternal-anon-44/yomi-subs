@@ -64,6 +64,46 @@
   -webkit-user-select: text;
 }
 
+/* ── Wrapper — keeps JP + translation centered as one unit ──────────────── */
+
+.yomi-subtitle-wrapper {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ── Translation line ───────────────────────────────────────────────────── */
+
+.yomi-translation-text {
+  pointer-events: auto;
+  background: rgba(10, 10, 10, 0.78);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  color: #cccccc;
+
+  /* Latin/CJK fallback — translation is usually Latin script */
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', sans-serif;
+
+  font-size: calc(var(--yomi-font-size, 34px) * 0.62);
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  line-height: 1.5;
+
+  padding: 7px 20px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+
+  display: inline-block;
+  max-width: 90%;
+  word-break: break-word;
+
+  user-select: text;
+  -webkit-user-select: text;
+}
+
 /* ── OCR mode — hard edges, no blur, maximum contrast ──────────────────── */
 /* Enables clean screenshot capture for external OCR tools                  */
 
@@ -73,10 +113,22 @@
   -webkit-backdrop-filter: none;
   color: #ffffff;
   border: 2px solid #ffffff;
-  border-radius: 4px;          /* minimal rounding for clean crop */
+  border-radius: 4px;
   box-shadow: none;
   text-shadow: none;
   font-family: 'Noto Sans JP', 'MS Gothic', monospace;
   letter-spacing: 0.1em;
   font-weight: 700;
+}
+
+#yomi-subs-container.yomi-ocr-mode .yomi-translation-text {
+  background: #111111;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  color: #dddddd;
+  border: 1px solid #666666;
+  border-radius: 2px;
+  box-shadow: none;
+  text-shadow: none;
+  font-weight: 600;
 }

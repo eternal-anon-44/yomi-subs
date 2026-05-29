@@ -26,7 +26,7 @@ chrome.runtime.onMessage.addListener((message) => {
       break;
 
     case "new_subtitle":
-      if (overlayVisible) handleNewSubtitle(message.text);
+      if (overlayVisible) handleNewSubtitle(message.text, message.translation ?? null);
       break;
 
     case "toggle_overlay":
@@ -44,7 +44,7 @@ chrome.runtime.onMessage.addListener((message) => {
 
 // ── Subtitle rendering ────────────────────────────────────────────────────────
 
-function handleNewSubtitle(text) {
+function handleNewSubtitle(text, translation) {
   // Auto-sync: rewind video once so the first subtitle aligns with the dialogue.
   if (shouldApplyVideoDelay) {
     const video = document.querySelector("video");
@@ -55,16 +55,30 @@ function handleNewSubtitle(text) {
   }
 
   positionContainer();
-  renderSubtitle(text);
+  renderSubtitle(text, translation);
 }
 
-function renderSubtitle(text) {
-  // Use textContent (not innerHTML) to prevent XSS from transcribed content
+function renderSubtitle(text, translation) {
+  // Wrapper keeps both lines centered as a single visual unit
   container.innerHTML = "";
-  const span = document.createElement("span");
-  span.className = "yomi-subtitle-text";
-  span.textContent = text;
-  container.appendChild(span);
+  const wrapper = document.createElement("div");
+  wrapper.className = "yomi-subtitle-wrapper";
+
+  // Japanese line — use textContent (not innerHTML) to prevent XSS
+  const jpSpan = document.createElement("span");
+  jpSpan.className = "yomi-subtitle-text";
+  jpSpan.textContent = text;
+  wrapper.appendChild(jpSpan);
+
+  // Translation line — only rendered when present
+  if (translation) {
+    const trSpan = document.createElement("span");
+    trSpan.className = "yomi-translation-text";
+    trSpan.textContent = translation;
+    wrapper.appendChild(trSpan);
+  }
+
+  container.appendChild(wrapper);
 
   clearTimeout(window._yomiTimeout);
   window._yomiTimeout = setTimeout(() => {

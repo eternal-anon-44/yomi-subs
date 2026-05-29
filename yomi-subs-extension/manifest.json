@@ -1,0 +1,56 @@
+{
+  "manifest_version": 3,
+  "name": "Yomi-Subs: Real-Time JP Transcription",
+  "version": "2.0",
+  "description": "Live Japanese audio transcription overlay using local faster-whisper or OpenAI Whisper API. Yomitan-compatible.",
+  "permissions": [
+    "tabCapture",
+    "activeTab",
+    "offscreen",
+    "scripting",
+    "storage",
+    "commands"
+  ],
+  "host_permissions": [
+    "ws://localhost:*/*",
+    "wss://localhost:*/*",
+    "https://api.openai.com/*"
+  ],
+  "icons": {
+    "16":  "icons/icon16.png",
+    "32":  "icons/icon32.png",
+    "48":  "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16":  "icons/icon16.png",
+      "32":  "icons/icon32.png",
+      "48":  "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js":  ["content.js"],
+      "css": ["content.css"]
+    }
+  ],
+  "commands": {
+    "toggle-transcription": {
+      "suggested_key": {
+        "default": "Alt+Shift+T",
+        "mac":     "Alt+Shift+T"
+      },
+      "description": "Toggle transcription on/off"
+    }
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  }
+}

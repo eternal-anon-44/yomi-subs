@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      width: 290px;
+      background: #0f0f13;
+      color: #e8e8e8;
+      font-size: 13px;
+    }
+
+    /* ── Header ── */
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid #1e1e28;
+    }
+    .header-logo {
+      font-size: 20px;
+      font-weight: 800;
+      color: #e63946;
+      letter-spacing: -0.5px;
+    }
+    .header-sub {
+      font-size: 11px;
+      color: #888;
+      margin-top: 1px;
+    }
+
+    /* ── Tabs ── */
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid #1e1e28;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 9px 0;
+      background: none;
+      border: none;
+      color: #666;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      letter-spacing: 0.3px;
+      transition: color 0.15s;
+    }
+    .tab-btn.active {
+      color: #e63946;
+      border-bottom: 2px solid #e63946;
+    }
+    .tab-btn:hover:not(.active) { color: #ccc; }
+
+    /* ── Tab panels ── */
+    .tab-panel { display: none; padding: 14px 16px; }
+    .tab-panel.active { display: block; }
+
+    /* ── Status bar ── */
+    .status-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      background: #18181f;
+      margin-bottom: 12px;
+      border: 1px solid #222230;
+    }
+    .status-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #555;
+      flex-shrink: 0;
+      transition: background 0.2s;
+    }
+    .status-dot.ready    { background: #555; }
+    .status-dot.conn     { background: #f4a261; animation: pulse 1s infinite; }
+    .status-dot.rec      { background: #e63946; animation: pulse 0.8s infinite; }
+    .status-dot.proc     { background: #457b9d; animation: pulse 0.5s infinite; }
+    .status-dot.stopped  { background: #555; }
+    .status-dot.error    { background: #f4a261; }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.35; }
+    }
+    #statusText { font-size: 12px; color: #aaa; }
+
+    /* ── Buttons ── */
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 11px;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+      letter-spacing: 0.3px;
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn:disabled { opacity: 0.4; cursor: default; }
+    .btn-start { background: #e63946; color: #fff; margin-bottom: 7px; }
+    .btn-stop  { background: #2a2a36; color: #ccc; }
+    .btn-save  { background: #457b9d; color: #fff; margin-top: 10px; }
+
+    /* ── Control groups ── */
+    .control-group {
+      background: #18181f;
+      border: 1px solid #222230;
+      border-radius: 8px;
+      padding: 11px 13px;
+      margin-top: 10px;
+    }
+    .group-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: #e63946;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-bottom: 9px;
+    }
+    .label-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+      font-size: 12px;
+      color: #bbb;
+    }
+    .label-row span:last-child { color: #e8e8e8; font-weight: 600; }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: #e63946;
+      cursor: pointer;
+    }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 9px;
+      font-size: 12px;
+      color: #bbb;
+      cursor: pointer;
+    }
+    .toggle-row input { accent-color: #e63946; cursor: pointer; }
+
+    /* ── Shortcut hint ── */
+    .shortcut-hint {
+      text-align: center;
+      font-size: 11px;
+      color: #444;
+      margin-top: 12px;
+    }
+    kbd {
+      background: #222;
+      border: 1px solid #333;
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-family: monospace;
+      color: #999;
+      font-size: 10px;
+    }
+
+    /* ── Settings fields ── */
+    .field { margin-bottom: 11px; }
+    .field label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      margin-bottom: 5px;
+    }
+    .field input[type="text"],
+    .field input[type="password"],
+    .field select {
+      width: 100%;
+      padding: 8px 10px;
+      background: #18181f;
+      border: 1px solid #2a2a38;
+      border-radius: 6px;
+      color: #e8e8e8;
+      font-size: 12px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .field input:focus,
+    .field select:focus { border-color: #e63946; }
+
+    .radio-group { display: flex; flex-direction: column; gap: 7px; }
+    .radio-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: #bbb;
+      cursor: pointer;
+    }
+    .radio-label input { accent-color: #e63946; }
+
+    .key-row {
+      display: flex;
+      gap: 6px;
+    }
+    .key-row input { flex: 1; }
+    .btn-eye {
+      padding: 0 10px;
+      background: #2a2a36;
+      border: 1px solid #333;
+      border-radius: 6px;
+      color: #888;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    #saveStatus {
+      font-size: 11px;
+      text-align: center;
+      margin-top: 6px;
+      color: #2a9d8f;
+      min-height: 16px;
+    }
+
+    .section-divider {
+      border: none;
+      border-top: 1px solid #1e1e28;
+      margin: 12px 0;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="header">
+    <div>
+      <div class="header-logo">字 Yomi-Subs</div>
+      <div class="header-sub">Real-Time JP Transcription v2</div>
+    </div>
+  </div>
+
+  <!-- Tab navigation -->
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="main">▶ Main</button>
+    <button class="tab-btn" data-tab="settings">⚙ Settings</button>
+  </div>
+
+  <!-- ── MAIN TAB ── -->
+  <div id="tab-main" class="tab-panel active">
+
+    <div class="status-bar">
+      <div class="status-dot ready" id="statusDot"></div>
+      <span id="statusText">Ready</span>
+    </div>
+
+    <button class="btn btn-start" id="startBtn">▶ Start Transcription</button>
+    <button class="btn btn-stop"  id="stopBtn">■ Stop Transcription</button>
+
+    <div class="control-group">
+      <div class="group-title">Chunk / Sync</div>
+      <div class="label-row">
+        <span>Audio chunk size</span>
+        <span id="delayVal">2.0 s</span>
+      </div>
+      <input type="range" id="delaySlider" min="1" max="6" step="0.5" value="2">
+      <div class="toggle-row">
+        <input type="checkbox" id="syncDelay" checked>
+        <label for="syncDelay">Auto-sync video on first subtitle</label>
+      </div>
+    </div>
+
+    <p class="shortcut-hint">Toggle: <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>T</kbd></p>
+  </div>
+
+  <!-- ── SETTINGS TAB ── -->
+  <div id="tab-settings" class="tab-panel">
+
+    <div class="control-group">
+      <div class="group-title">Transcription Backend</div>
+      <div class="radio-group">
+        <label class="radio-label">
+          <input type="radio" name="mode" value="local" id="modeLocal">
+          Local (faster-whisper — no API key)
+        </label>
+        <label class="radio-label">
+          <input type="radio" name="mode" value="openai" id="modeOpenAI">
+          OpenAI Whisper API
+        </label>
+      </div>
+    </div>
+
+    <!-- Local settings -->
+    <div id="localPanel" class="control-group">
+      <div class="group-title">Local Backend</div>
+      <div class="field">
+        <label>WebSocket URL</label>
+        <input type="text" id="wsUrl" placeholder="ws://localhost:8765">
+      </div>
+    </div>
+
+    <!-- OpenAI settings -->
+    <div id="openaiPanel" class="control-group" style="display:none">
+      <div class="group-title">OpenAI API</div>
+      <div class="field">
+        <label>API Key</label>
+        <div class="key-row">
+          <input type="password" id="apiKey" placeholder="sk-...">
+          <button class="btn-eye" id="toggleKey" title="Show/hide key">👁</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Chunk duration (seconds)</label>
+        <div class="label-row">
+          <input type="range" id="openaiChunk" min="3" max="10" step="1" value="4">
+          <span id="openaiChunkVal">4 s</span>
+        </div>
+      </div>
+    </div>
+
+    <hr class="section-divider">
+
+    <div class="control-group">
+      <div class="group-title">Display</div>
+      <div class="field">
+        <label>Font size</label>
+        <div class="label-row">
+          <input type="range" id="fontSize" min="18" max="60" step="2" value="34">
+          <span id="fontSizeVal">34 px</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Subtitle position</label>
+        <select id="subtitlePosition">
+          <option value="bottom">Bottom (default)</option>
+          <option value="top">Top</option>
+          <option value="center">Center</option>
+        </select>
+      </div>
+      <div class="toggle-row">
+        <input type="checkbox" id="ocrMode">
+        <label for="ocrMode">OCR mode — high contrast, no blur</label>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <div class="group-title">Audio</div>
+      <div class="toggle-row">
+        <input type="checkbox" id="audioMonitor" checked>
+        <label for="audioMonitor">Monitor audio through speakers</label>
+      </div>
+    </div>
+
+    <button class="btn btn-save" id="saveBtn">Save Settings</button>
+    <div id="saveStatus"></div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

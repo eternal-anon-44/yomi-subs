@@ -24,6 +24,11 @@ chrome.runtime.onMessage.addListener(async (message) => {
 // ── Setup ────────────────────────────────────────────────────────────────────
 
 async function beginRecording(streamId) {
+  // Guard against double-call (e.g. user clicks Start twice quickly)
+  if (mediaRecorder !== null) {
+    console.warn("[YomiSubs] Recording already in progress — ignoring duplicate start");
+    return;
+  }
   sendStatus("connecting");
 
   let stream;
@@ -86,11 +91,20 @@ function startLocalMode(stream) {
     if (evt.code !== 1000) sendStatus("error:ws_disconnected");
   };
 
+  // Serialize translation calls — if a slow translation is in flight when
+  // the next chunk arrives, skip translation for that chunk rather than
+  // letting concurrent requests pile up out-of-order.
+  let translating = false;
   socket.onmessage = async (evt) => {
     const text = evt.data?.trim();
     if (!text) return;
     sendStatus("recording");
-    const translation = await maybeTranslate(text);
+    let translation = null;
+    if (!translating) {
+      translating = true;
+      try { translation = await maybeTranslate(text); }
+      finally { translating = false; }
+    }
     forwardSubtitle(text, translation);
   };
 }
@@ -109,13 +123,16 @@ function startOpenAIMode(stream) {
   const chunkMs = (currentSettings.chunkDurationOpenAI || 4) * 1000;
   sendStatus("recording");
 
+  let processing = false;
   setupChunkedRecorder(stream, chunkMs, async (blob) => {
+    if (processing) return; // drop chunk if previous transcription+translation still in flight
+    processing = true;
     sendStatus("processing");
     try {
       const text = await callWhisperAPI(blob, apiKey);
       if (text?.trim()) {
-        sendStatus("recording");
         const translation = await maybeTranslate(text.trim());
+        sendStatus("recording");
         forwardSubtitle(text.trim(), translation);
       } else {
         sendStatus("recording");
@@ -124,6 +141,8 @@ function startOpenAIMode(stream) {
       console.error("[YomiSubs] OpenAI error:", err.message);
       sendStatus(`error:${err.message.slice(0, 60)}`);
       // Don't cleanup — transient errors (rate limit) should self-recover.
+    } finally {
+      processing = false;
     }
   });
 }

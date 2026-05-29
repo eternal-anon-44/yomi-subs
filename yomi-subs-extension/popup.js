@@ -198,15 +198,18 @@ async function loadSettings() {
 
   wsUrlInput.value           = s.wsUrl;
   apiKeyInput.value          = s.openaiApiKey;
-  delaySlider.value          = s.delayValue;
-  delayVal.textContent       = parseFloat(s.delayValue).toFixed(1) + " s";
-  syncDelay.checked          = s.delayVideo;
+  // Set slider values then fire synthetic input so the display label
+  // always updates through the single listener — avoids async race where
+  // loadSettings() resolves after the user has already moved a slider.
+  delaySlider.value = s.delayValue;
+  delaySlider.dispatchEvent(new Event("input"));
+  syncDelay.checked = s.delayVideo;
 
-  openaiChunk.value          = s.chunkDurationOpenAI;
-  openaiChunkVal.textContent = s.chunkDurationOpenAI + " s";
+  openaiChunk.value = s.chunkDurationOpenAI;
+  openaiChunk.dispatchEvent(new Event("input"));
 
-  fontSizeSlider.value       = s.fontSize;
-  fontSizeVal.textContent    = s.fontSize + " px";
+  fontSizeSlider.value = s.fontSize;
+  fontSizeSlider.dispatchEvent(new Event("input"));
 
   positionSel.value          = s.subtitlePosition;
   ocrMode.checked            = s.ocrMode;
@@ -259,8 +262,11 @@ async function saveSettings() {
 
 // ── Init — chrome API calls last so DOM event listeners always register ───────
 
+// Always run panel sync so the translate section hides correctly even in
+// file:// preview (IN_EXTENSION may be true but storage unavailable).
+syncTranslatePanel();
+
 if (IN_EXTENSION) {
-  // Receive status pushes from the background service worker
   chrome.runtime.onMessage.addListener((msg) => {
     if (msg.action === "status_update") setStatus(msg.status);
   });

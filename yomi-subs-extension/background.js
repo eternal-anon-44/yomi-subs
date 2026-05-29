@@ -90,9 +90,20 @@ async function handleStop() {
 }
 
 async function startCapture(tabId, settings) {
-  const streamId = await new Promise((resolve) => {
-    chrome.tabCapture.getMediaStreamId({ targetTabId: tabId }, resolve);
+  const streamId = await new Promise((resolve, reject) => {
+    chrome.tabCapture.getMediaStreamId({ targetTabId: tabId }, (id) => {
+      if (chrome.runtime.lastError) {
+        reject(new Error(chrome.runtime.lastError.message));
+      } else {
+        resolve(id);
+      }
+    });
+  }).catch((err) => {
+    broadcastStatus(`error:${err.message}`);
+    return null;
   });
+
+  if (!streamId) return;
 
   const hasDocument = await chrome.offscreen.hasDocument();
   if (!hasDocument) {
@@ -125,7 +136,10 @@ async function loadSettings() {
     fontSize: 34,
     subtitlePosition: "bottom",
     ocrMode: false,
-    audioMonitor: true
+    audioMonitor: true,
+    translateEnabled: false,
+    googleApiKey: "",
+    targetLang: "en"
   });
 }
 

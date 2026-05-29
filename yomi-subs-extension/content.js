@@ -47,10 +47,10 @@ chrome.runtime.onMessage.addListener((message) => {
 function handleNewSubtitle(text, translation) {
   // Auto-sync: rewind video once so the first subtitle aligns with the dialogue.
   if (shouldApplyVideoDelay) {
+    shouldApplyVideoDelay = false; // always reset — only rewind once per session
     const video = document.querySelector("video");
     if (video && !video.paused && video.currentTime > currentDelayValue) {
       video.currentTime -= currentDelayValue;
-      shouldApplyVideoDelay = false;
     }
   }
 

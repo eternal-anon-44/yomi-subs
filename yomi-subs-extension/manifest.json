@@ -12,8 +12,8 @@
     "commands"
   ],
   "host_permissions": [
-    "ws://localhost:*/*",
-    "wss://localhost:*/*",
+    "ws://localhost:*",
+    "wss://localhost:*",
     "https://api.openai.com/*",
     "https://translation.googleapis.com/*"
   ],

@@ -190,4 +190,4 @@ Pull requests are welcome. For significant changes, open an issue first.
 
 ## License
 
-[MIT](LICENSE) — © 2026 Julian Benson
+[MIT](LICENSE) — © 2026 eternal-anon-44

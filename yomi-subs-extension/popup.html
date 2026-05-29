@@ -106,9 +106,10 @@
     }
     .btn:active { transform: scale(0.98); }
     .btn:disabled { opacity: 0.4; cursor: default; }
-    .btn-start { background: #e63946; color: #fff; margin-bottom: 7px; }
-    .btn-stop  { background: #2a2a36; color: #ccc; }
-    .btn-save  { background: #457b9d; color: #fff; margin-top: 10px; }
+    .btn-start        { background: #e63946; color: #fff; margin-bottom: 7px; }
+    .btn-stop         { background: #2a2a36; color: #ccc; margin-bottom: 7px; }
+    .btn-toggle-overlay { background: #1e1e2a; color: #888; border: 1px solid #2a2a38; font-size: 12px; padding: 8px; }
+    .btn-save         { background: #457b9d; color: #fff; margin-top: 10px; }
 
     /* ── Control groups ── */
     .control-group {
@@ -262,8 +263,9 @@
       <span id="statusText">Ready</span>
     </div>
 
-    <button class="btn btn-start" id="startBtn">▶ Start Transcription</button>
-    <button class="btn btn-stop"  id="stopBtn">■ Stop Transcription</button>
+    <button class="btn btn-start"          id="startBtn">▶ Start Transcription</button>
+    <button class="btn btn-stop"           id="stopBtn">■ Stop Transcription</button>
+    <button class="btn btn-toggle-overlay" id="toggleOverlayBtn">◉ Hide Subtitles</button>
 
     <div class="control-group">
       <div class="group-title">Chunk / Sync</div>
@@ -278,7 +280,11 @@
       </div>
     </div>
 
-    <p class="shortcut-hint">Toggle: <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>T</kbd></p>
+    <p class="shortcut-hint">
+      Toggle: <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>T</kbd>
+      &nbsp;|&nbsp;
+      Hide: <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>H</kbd>
+    </p>
   </div>
 
   <!-- ── SETTINGS TAB ── -->

@@ -9,6 +9,7 @@ if (!container) {
 
 let shouldApplyVideoDelay = false;
 let currentDelayValue = 2.0;
+let overlayVisible = true;
 
 // ── Message handlers ─────────────────────────────────────────────────────────
 
@@ -25,7 +26,18 @@ chrome.runtime.onMessage.addListener((message) => {
       break;
 
     case "new_subtitle":
-      handleNewSubtitle(message.text);
+      if (overlayVisible) handleNewSubtitle(message.text);
+      break;
+
+    case "toggle_overlay":
+      overlayVisible = !overlayVisible;
+      if (!overlayVisible) {
+        clearTimeout(window._yomiTimeout);
+        container.innerHTML = "";
+        container.style.display = "none";
+      } else {
+        container.style.display = "";
+      }
       break;
   }
 });

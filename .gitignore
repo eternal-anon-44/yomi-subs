@@ -1,0 +1,53 @@
+# Python
+yomi-subs-backend/venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+
+# Environment / secrets — NEVER commit real keys
+.env
+.env.local
+.env.*.local
+*.key
+
+# Node (if ever added)
+node_modules/
+npm-debug.log*
+yarn-error.log*
+
+# Logs
+*.log
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Build outputs
+extension-v2.zip
+Yomi-Subs-Launcher.exe
+
+# Placeholder icons — replace with final art before publishing
+# Remove these lines once you've added real icons:
+# store-assets/icons/
+
+# Whisper model cache (can be large)
+~/.cache/huggingface/

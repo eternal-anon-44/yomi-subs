@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+# Yomi-Subs v2 macOS launcher
+# This script lives inside Launch-TranscribeJP.app/Contents/MacOS/
+# The .app is ad-hoc signed so Gatekeeper won't block it.
+
+# Resolve the project root (three levels up from MacOS/ → Contents/ → .app/ → project/)
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_DIR="$(cd "$SCRIPT_DIR/../../.." && pwd)"
+BACKEND_DIR="$PROJECT_DIR/yomi-subs-backend"
+VENV_DIR="$BACKEND_DIR/venv"
+
+# ── Terminal window for log output ────────────────────────────────────────────
+# Open a Terminal window so the user can see transcription output and errors.
+open -a Terminal "$0"
+
+# Prevent the script from re-opening Terminal when already inside one.
+# (Terminal sets TERM_PROGRAM; a double-open would loop indefinitely.)
+if [ -n "$TERM_PROGRAM" ]; then
+
+  echo ""
+  echo "  字 Yomi-Subs v2"
+  echo "  ─────────────────────────────────────────"
+
+  # ── Python check ────────────────────────────────────────────────────────────
+  if ! command -v python3 &>/dev/null; then
+    echo "  ✗ python3 not found."
+    echo "    Install Python 3.9+ from https://python.org or via Homebrew:"
+    echo "      brew install python"
+    read -r -p "  Press Return to close…"
+    exit 1
+  fi
+
+  PY_VER=$(python3 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
+  echo "  ✓ Python $PY_VER"
+
+  # ── Virtualenv ───────────────────────────────────────────────────────────────
+  if [ ! -d "$VENV_DIR" ]; then
+    echo "  → Creating virtual environment (first run only)…"
+    python3 -m venv "$VENV_DIR"
+  fi
+
+  # shellcheck disable=SC1091
+  source "$VENV_DIR/bin/activate"
+
+  echo "  → Checking dependencies…"
+  pip install -q -r "$BACKEND_DIR/requirements.txt"
+  echo "  ✓ Dependencies ready"
+
+  # ── Launch ───────────────────────────────────────────────────────────────────
+  echo "  → Starting Yomi-Subs backend (ws://localhost:8765)…"
+  echo ""
+  python3 "$BACKEND_DIR/server.py"
+
+  # Keep Terminal open if server exits so the user can read any error messages
+  echo ""
+  read -r -p "  Server stopped. Press Return to close…"
+fi

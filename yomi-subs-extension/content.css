@@ -1,0 +1,82 @@
+/* Yomi-Subs subtitle overlay — injected on every page */
+
+:root {
+  --yomi-font-size: 34px;
+}
+
+#yomi-subs-container {
+  position: absolute;
+  bottom: 12%;
+  left: 0;
+  width: 100%;
+  text-align: center;
+  z-index: 2147483647;
+  pointer-events: none;
+}
+
+/* Positional variants set via data-position attribute */
+#yomi-subs-container[data-position="top"] {
+  bottom: auto;
+  top: 8%;
+}
+
+#yomi-subs-container[data-position="center"] {
+  bottom: auto;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* ── Default subtitle chip ──────────────────────────────────────────────── */
+
+.yomi-subtitle-text {
+  pointer-events: auto;         /* allow Yomitan hover-lookup */
+  background: rgba(10, 10, 10, 0.88);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  color: #ffffff;
+
+  /* CJK-optimised font stack: prefers system CJK fonts, falls back broadly */
+  font-family:
+    'Hiragino Sans',            /* macOS */
+    'Noto Sans JP',             /* cross-platform */
+    'Yu Gothic',                /* Windows 8.1+ */
+    'Meiryo',                   /* Windows legacy */
+    'MS Gothic',                /* Windows legacy monospace */
+    sans-serif;
+
+  font-size: var(--yomi-font-size, 34px);
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  line-height: 1.6;
+
+  padding: 14px 28px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.65);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
+
+  display: inline-block;
+  max-width: 90%;
+  word-break: break-all;       /* prevent CJK runs overflowing */
+
+  /* Make text selectable so Yomitan can read it */
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+/* ── OCR mode — hard edges, no blur, maximum contrast ──────────────────── */
+/* Enables clean screenshot capture for external OCR tools                  */
+
+#yomi-subs-container.yomi-ocr-mode .yomi-subtitle-text {
+  background: #000000;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  color: #ffffff;
+  border: 2px solid #ffffff;
+  border-radius: 4px;          /* minimal rounding for clean crop */
+  box-shadow: none;
+  text-shadow: none;
+  font-family: 'Noto Sans JP', 'MS Gothic', monospace;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+}
